@@ -74,39 +74,18 @@ enum PressureUnitList {
  * Kitronik Air Quality Board MakeCode Extension
  */
 
-//% weight=100 color=#00A654 icon="\uf0c2" block="Air Quality"
+//% weight=100 color=#00A654 icon="\uf0c2" block="Air Quality (V2)"
 //% groups='["Control", "Show", "Draw", "Delete", "Advanced", "Set Time", "Set Date", "Read Time", "Read Date", "Alarm", "Setup", "Measure", "Climate", "Air Quality", "General Inputs/Outputs", "Write", "Read," "Setup", "Add Data", "Transfer"]'
 namespace kitronik_air_quality {
     ////////////////////////////////
     //         ZIP LEDS           //
     ////////////////////////////////
-
     export class airQualityZIPLEDs {
         buf: Buffer;
         pin: DigitalPin;
         brightness: number;
         start: number;
         _length: number;
-
-        /** 
-         * Create a range of LEDs.
-         * @param start offset in the LED strip to start the range
-         * @param length number of LEDs in the range. eg: 2
-         */
-        //% subcategory="ZIP LEDs"
-        //% weight=89 blockGap=8
-        //% blockId="kitronik_air_quality_range" block="%statusLEDs|range from %start|with %length|LEDs"
-        range(start: number, length: number): airQualityZIPLEDs {
-            start = start >> 0;
-            length = length >> 0;
-            let zipLEDs = new airQualityZIPLEDs();
-            zipLEDs.buf = this.buf;
-            zipLEDs.pin = this.pin;
-            zipLEDs.brightness = this.brightness;
-            zipLEDs.start = this.start + Math.clamp(0, this._length - 1, start);
-            zipLEDs._length = Math.clamp(0, this._length - (zipLEDs.start - this.start), length);
-            return zipLEDs;
-        }
 
         /**
          * Rotate LEDs forward.
@@ -119,17 +98,7 @@ namespace kitronik_air_quality {
         rotate(offset: number = 1): void {
             this.buf.rotate(-offset * 3, this.start * 3, this._length * 3)
         }
-        /**
-         * Sets all the ZIP LEDs to a given color (range 0-255 for r, g, b). Call Show to make changes visible 
-         * @param rgb RGB color of the LED
-         */
-        //% subcategory="ZIP LEDs"
-        //% blockId="kitronik_air_quality_display_only_set_strip_color" block="%statusLEDs|set color %rgb=kitronik_air_quality_colors" 
-        //% weight=96 blockGap=8
-        setColor(rgb: number) {
-            rgb = rgb >> 0;
-            this.setAllRGB(rgb);
-        }
+        
         /**
          * Shows all the ZIP LEDs as a given color (range 0-255 for r, g, b). 
          * @param rgb RGB color of the LED
@@ -253,34 +222,6 @@ namespace kitronik_air_quality {
         statusLEDs.pin = DigitalPin.P8;
         pins.digitalWritePin(statusLEDs.pin, 0);
         return statusLEDs;
-    }
-
-    /**
-     * Converts wavelength value to red, green, blue channels
-     * @param wavelength value between 470 and 625. eg: 500
-     */
-    //% subcategory="ZIP LEDs"
-    //% weight=1 blockGap=8
-    //% blockId="kitronik_air_quality_wavelength" block="wavelength %wavelength|nm"
-    //% wavelength.min=470 wavelength.max=625
-    export function wavelength(wavelength: number): number {
-        /*  The LEDs we are using have centre wavelengths of 470nm (Blue) 525nm(Green) and 625nm (Red) 
-        * 	 We blend these linearly to give the impression of the other wavelengths. 
-        *   as we cant wavelength shift an actual LED... (Ye canna change the laws of physics Capt)*/
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        if ((wavelength >= 470) && (wavelength < 525)) {
-            //We are between Blue and Green so mix those
-            g = pins.map(wavelength, 470, 525, 0, 255);
-            b = pins.map(wavelength, 470, 525, 255, 0);
-        }
-        else if ((wavelength >= 525) && (wavelength <= 625)) {
-            //we are between Green and Red, so mix those
-            r = pins.map(wavelength, 525, 625, 0, 255);
-            g = pins.map(wavelength, 525, 625, 255, 0);
-        }
-        return packRGB(r, g, b);
     }
 
     /**
