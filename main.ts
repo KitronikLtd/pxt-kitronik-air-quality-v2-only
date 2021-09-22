@@ -528,76 +528,8 @@ namespace kitronik_air_quality {
     //% block="plot %plotVariable| onto display"
     //% weight=100 blockGap=8
     export function plot(plotVariable: number) {
-        displayAddress = setScreenAddr(screen)
-        if (initialised == 0) {
-            initDisplay(1)
-        }
-
-        let plotLength = plotArray.length
-        if (plotLength == 127) {     // If the length of the array has reached the max number of pixels, shift the array and remove the oldest value
-            plotArray.shift()
-        }
-        // Round the variable to use ints rather than floats
-        plotVariable = Math.round(plotVariable)
-        // Add the value to the end of the array
-        plotArray.push(plotVariable)
-
-        // If the variable exceeds the scale of the y axis, update the min or max limits
-        if (plotVariable > graphYMax)
-            graphYMax = plotVariable
-        if (plotVariable < graphYMin)
-            graphYMin = plotVariable
-
-        // 'for' loop plots the graph on the display
-        for (let arrayPosition = 0; arrayPosition <= plotLength; arrayPosition++) {
-            let x3 = arrayPosition  // Start of the screen (x-axis)
-            let yPlot = plotArray[arrayPosition]
-            // Map the variables to scale between the min and max values to the min and max graph pixel area
-            yPlot = pins.map(yPlot, graphYMin, graphYMax, GRAPH_Y_MIN_LOCATION, GRAPH_Y_MAX_LOCATION)
-
-            if (arrayPosition == 0) {
-                previousYPlot = yPlot
-            }
-            let y3 = 0
-            let len = 0
-
-            // Determine if the line needs to be drawn from the last point to the new or visa-versa (vertical lines can only be drawn down the screen)
-            if (yPlot < previousYPlot) {
-                y3 = yPlot
-                len = (previousYPlot - yPlot)
-            }
-            else if (yPlot > previousYPlot) {
-                y3 = previousYPlot
-                len = (yPlot - previousYPlot)
-            }
-            else {
-                y3 = yPlot
-                len = 1
-            }
-
-            // Clear plots in screenBuffer
-            let page3 = 0
-            for (let pixel = GRAPH_Y_MAX_LOCATION; pixel <= GRAPH_Y_MIN_LOCATION; pixel++) {
-                page3 = pixel >> 3
-                let shift_page3 = pixel % 8
-                let ind5 = x3 + page3 * 128 + 1
-                let screenPixel3 = clearBit(screenBuf[ind5], shift_page3)   // Clear the screen data byte
-                screenBuf[ind5] = screenPixel3                              // Store data in screenBuffer
-            }
-
-            // Plot new data in screenBuffer
-            for (let pixel = y3; pixel < (y3 + len); pixel++) {
-                page3 = pixel >> 3
-                let shift_page4 = pixel % 8
-                let ind6 = x3 + page3 * 128 + 1
-                let screenPixel4 = (screenBuf[ind6] | (1 << shift_page4))   // Set the screen data byte
-                screenBuf[ind6] = screenPixel4                              // Store data in screen buffer
-            }
-            previousYPlot = yPlot
-        }
-        refresh() // Refresh screen with new data in screenBuffer
+        kitronik_OLED_V2.plot_Base(plotVariable)
     }
-
 
     //////////////////////////////////////
     //
@@ -607,20 +539,13 @@ namespace kitronik_air_quality {
 
     /**
      * Update or refresh the screen if any data has been changed.
-     * @param screen is screen selection when using multiple screens
      */
     //% subcategory="Display"
     //% group="Advanced"
     //% blockId="kitronik_air_quality_draw" block="refresh display"
     //% weight=63 blockGap=8
-    export function refresh(screen?: 1) {
-        displayAddress = setScreenAddr(screen)
-        if (initialised == 0) {
-            initDisplay(1)
-        }
-
-        set_pos()
-        pins.i2cWriteBuffer(displayAddress, screenBuf)
+    export function refresh() {
+        kitronik_OLED_V2.refresh_Base()
     }
 
     /**
@@ -631,20 +556,8 @@ namespace kitronik_air_quality {
     //% group="Advanced"
     //% blockId="kitronik_air_quality_invert_screen" block="inverted display %output=on_off_toggle"
     //% weight=62 blockGap=8
-    export function invert(output: boolean, screen?: 1) {
-        let invertRegisterValue = 0
-        displayAddress = setScreenAddr(screen)
-        if (initialised == 0) {
-            initDisplay(1)
-        }
-
-        if (output == true) {
-            invertRegisterValue = 0xA7
-        }
-        else {
-            invertRegisterValue = 0xA6
-        }
-        writeOneByte(invertRegisterValue)
+    export function invert(output: boolean) {
+        kitronik_OLED_V2.invert_Base(output)
     }
 
     ////////////////////////////////
@@ -1189,11 +1102,11 @@ namespace kitronik_air_quality {
             setupGasSensor()
         }
 
-        show("Setting baselines", 4)
+        show("Setting baselines", 4, ShowAlign.Centre)
 
         kitronik_BME688.establishBaselines()    // Call function in bme688-base to read and calculate the baselines for gas resistance and ambient temperature
 
-        show("Setup Complete!", 5)
+        show("Setup Complete!", 5, ShowAlign.Centre)
         basic.pause(2000)
         clear()
     }
@@ -1779,7 +1692,6 @@ namespace kitronik_air_quality {
         else {
             let readLastEntry = (kitronik_EEPROM.readByte(12 * 128) << 8) | (kitronik_EEPROM.readByte((12 * 128) + 1))              // Read from block 12 how many entries have been stored so far
             lastEntry = readLastEntry & 0xFFF
-            show(lastEntry, 4)
             for (block = firstDataBlock; block < (firstDataBlock + lastEntry + 1); block++) {
                 data = kitronik_EEPROM.readBlock(block)
                 serial.writeString(data)
