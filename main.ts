@@ -1180,7 +1180,7 @@ namespace kitronik_air_quality {
 
         return kitronik_BME688.gRes
     }
-
+    
     /**
     * Read eCO2 from sensor as a Number (250 - 40000+ppm).
     * Units for eCO2 are in ppm (parts per million).
@@ -1223,7 +1223,7 @@ namespace kitronik_air_quality {
 
         return kitronik_BME688.iaqPercent
     }
-
+    
     /**
     * Return the Air Quality rating as an IAQ score (500 = Bad, 0 = Excellent).
     * These values are based on the BME688 datasheet, Page 11, Table 6.
@@ -1552,14 +1552,14 @@ namespace kitronik_air_quality {
         if (writeTitles == false) {
             storeTitles()
         }
-
+        
         logDate = readDate()
         logTime = readTime()
         logTemp = readTemperature(tUnit)
         logPress = readPressure(pUnit)
-        logHumid = hRead
-        logIAQ = iaqScore
-        logCO2 = eCO2Value
+        logHumid = readHumidity()
+        logIAQ = getAirQualityScore()
+        logCO2 = readeCO2()
         logLight = input.lightLevel()
 
         if (incDate) {
@@ -1586,6 +1586,8 @@ namespace kitronik_air_quality {
         if (incLight) {
             dataEntry = dataEntry + logLight + delimiter
         }
+
+        basic.pause(100)
 
         kitronik_EEPROM.writeBlock(dataEntry + "\r\n£", firstDataBlock + entryNum)
 
