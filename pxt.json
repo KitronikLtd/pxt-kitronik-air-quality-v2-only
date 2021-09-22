@@ -5,7 +5,10 @@
     "dependencies": {
         "core": "*",
         "radio": "*",
-        "microphone": "*"
+        "microphone": "*",
+        "kitronik_RTC": "github:KitronikLtd/pxt-kitronik-rtc-base#v0.0.12",
+        "kitronik_BME688": "github:KitronikLtd/pxt-kitronik-bme688-base#v0.0.7",
+        "kitronik_EEPROM": "github:KitronikLtd/pxt-kitronik-eeprom-base#v0.0.2"
     },
     "files": [
         "README.md",
@@ -23,5 +26,8 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "blocksprj"
+    "preferredEditor": "tsprj",
+    "disablesVariants": [
+        "mbdal"
+    ]
 }
