@@ -1517,10 +1517,12 @@ namespace kitronik_air_quality {
         headings = headings + "\r\n£"
         kitronik_EEPROM.writeBlock(headings, 23)
 
-        writeTitles = true
+        basic.pause(100)
 
         entryNum = (kitronik_EEPROM.readByte(12 * 128) << 8) | (kitronik_EEPROM.readByte((12 * 128) + 1))              // Read from block 12 how many entries have been stored so far
         entryNum = entryNum & 0xFFF
+
+        writeTitles = true
     }
 
     /**
@@ -1646,12 +1648,15 @@ namespace kitronik_air_quality {
         }
 
         basic.pause(100)
+        // Reset number of entries stored at block 12 to '0'
         let buf = pins.createBuffer(4)
         buf[0] = 0x06
         buf[1] = 0x00
-        buf[2] = 0x00
+        buf[2] = 0x10
         buf[3] = 0x00
         pins.i2cWriteBuffer(0x54, buf, false)
+
+        writeTitles = false
 
         clear()
         show("Memory Erase Complete", 2, ShowAlign.Centre)
@@ -1694,7 +1699,7 @@ namespace kitronik_air_quality {
         else {
             let readLastEntry = (kitronik_EEPROM.readByte(12 * 128) << 8) | (kitronik_EEPROM.readByte((12 * 128) + 1))              // Read from block 12 how many entries have been stored so far
             lastEntry = readLastEntry & 0xFFF
-            for (block = firstDataBlock; block < (firstDataBlock + lastEntry + 1); block++) {
+            for (block = firstDataBlock; block < (firstDataBlock + lastEntry + 2); block++) {
                 data = kitronik_EEPROM.readBlock(block)
                 serial.writeString(data)
             }
