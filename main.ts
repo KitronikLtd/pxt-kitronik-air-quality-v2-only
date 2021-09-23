@@ -1588,37 +1588,38 @@ namespace kitronik_air_quality {
             storeTitles()
         }
         
-        logDate = readDate()
-        logTime = readTime()
-        logTemp = readTemperature(tUnit)
-        logPress = readPressure(pUnit)
-        logHumid = readHumidity()
-        logIAQ = getAirQualityScore()
-        logCO2 = readeCO2()
-        logLight = input.lightLevel()
-
+        dataEntry = ""
+        
         if (incDate) {
+            logDate = readDate()
             dataEntry = dataEntry + logDate + delimiter
         }
         if (incTime) {
+            logTime = readTime()
             dataEntry = dataEntry + logTime + delimiter
         }
         if (incTemp) {
+            logTemp = readTemperature(tUnit)
             dataEntry = dataEntry + logTemp + delimiter
         }
         if (incPress) {
+            logPress = readPressure(pUnit)
             dataEntry = dataEntry + logPress + delimiter
         }
         if (incHumid) {
+            logHumid = readHumidity()
             dataEntry = dataEntry + logHumid + delimiter
         }
         if (incIAQ) {
+            logIAQ = getAirQualityScore()
             dataEntry = dataEntry + logIAQ + delimiter
         }
         if (incCO2) {
+            logCO2 = readeCO2()
             dataEntry = dataEntry + logCO2 + delimiter
         }
         if (incLight) {
+            logLight = input.lightLevel()
             dataEntry = dataEntry + logLight + delimiter
         }
 
@@ -1736,6 +1737,7 @@ namespace kitronik_air_quality {
             lastEntry = readLastEntry & 0xFFF
             for (block = firstDataBlock; block < (firstDataBlock + lastEntry + 2); block++) {
                 data = kitronik_EEPROM.readBlock(block)
+                basic.pause(100)
                 serial.writeString(data)
             }
         }
