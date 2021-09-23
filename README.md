@@ -3,7 +3,8 @@
 
 ## Use as Extension
 
-This repository can be added as an **extension** in MakeCode.
+This repository can be added as an **extension** in MakeCode, supporting the Kitronik Air Quality and Environmental Board:  
+https://kitronik.co.uk/products/5674-kitronik-air-quality-board-for-bbc-micro-bit
 
 * open [https://makecode.microbit.org/](https://makecode.microbit.org/)
 * click on **New Project**
