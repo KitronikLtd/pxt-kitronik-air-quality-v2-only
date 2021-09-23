@@ -383,10 +383,13 @@ namespace kitronik_air_quality {
     //% subcategory="Display"
     //% group="Show"
     //% weight=70 blockGap=8
-    //% x.min=0, x.max=127
-    //% y.min=0, y.max=63
+    //% x.min=0 x.max=127
+    //% y.min=0 y.max=63
     //% inlineInputMode=inline
     export function setPixel(x: number, y: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.setPixel_Base(x, y)
     }
 
@@ -399,10 +402,13 @@ namespace kitronik_air_quality {
     //% subcategory="Display"
     //% group="Delete"
     //% weight=70 blockGap=8
-    //% x.min=0, x.max=127
-    //% y.min=0, y.max=63
+    //% x.min=0 x.max=127
+    //% y.min=0 y.max=63
     //% inlineInputMode=inline
     export function clearPixel(x: number, y: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.clearPixel_Base(x, y)
     }
 
@@ -420,6 +426,9 @@ namespace kitronik_air_quality {
     //% inlineInputMode=inline
     //% line.min=1 line.max=8
     export function show(inputData: any, line: number, displayShowAlign: ShowAlign) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.show_Base(inputData, line, displayShowAlign)
     }
 
@@ -434,6 +443,9 @@ namespace kitronik_air_quality {
     //% inlineInputMode=inline
     //% line.min=1 line.max=8
     export function clearLine(line: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.clearLine_Base(line)
     }
 
@@ -448,11 +460,14 @@ namespace kitronik_air_quality {
     //% weight=72 blockGap=8
     //% subcategory="Display"
     //% group="Draw"
-    //% x.min=0, x.max=127
-    //% y.min=0, y.max=63
-    //% len.min=1, len.max=127
+    //% x.min=0 x.max=127
+    //% y.min=0 y.max=63
+    //% len.min=1 len.max=127
     //% inlineInputMode=inline
     export function drawLine(lineDirection: LineDirectionSelection, len: number, x: number, y: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.drawLine_Base(lineDirection, len, x, y)
     }
 
@@ -473,6 +488,9 @@ namespace kitronik_air_quality {
     //% x.min=0 x.max=127
     //% y.min=0 y.max=63
     export function drawRect(width: number, height: number, x: number, y: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.drawRect_Base(width, height, x, y)
     }
 
@@ -484,6 +502,9 @@ namespace kitronik_air_quality {
     //% group="Delete"
     //% weight=63 blockGap=8
     export function clear() {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.clear_Base()
     }
 
@@ -497,6 +518,9 @@ namespace kitronik_air_quality {
     //% group="Control"
     //% weight=80 blockGap=8
     export function controlDisplayOnOff(displayOutput: boolean) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.controlDisplayOnOff_Base(displayOutput)
     }
 
@@ -528,6 +552,9 @@ namespace kitronik_air_quality {
     //% block="plot %plotVariable| onto display"
     //% weight=100 blockGap=8
     export function plot(plotVariable: number) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.plot_Base(plotVariable)
     }
 
@@ -545,6 +572,9 @@ namespace kitronik_air_quality {
     //% blockId="kitronik_air_quality_draw" block="refresh display"
     //% weight=63 blockGap=8
     export function refresh() {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.refresh_Base()
     }
 
@@ -557,6 +587,9 @@ namespace kitronik_air_quality {
     //% blockId="kitronik_air_quality_invert_screen" block="inverted display %output=on_off_toggle"
     //% weight=62 blockGap=8
     export function invert(output: boolean) {
+        if (kitronik_OLED_V2.initialised == 0) {
+            kitronik_OLED_V2.initDisplay()
+        }
         kitronik_OLED_V2.invert_Base(output)
     }
 
@@ -1674,7 +1707,9 @@ namespace kitronik_air_quality {
     //% blockId=kitronik_air_quality_send_all
     //% block="transmit all data"
     export function sendAllData(): void {
-        serial.redirectToUSB()
+        if (comms != USB) {
+            serial.redirectToUSB()
+        }
 
         let block = firstDataBlock
         let lastEntry = 0
