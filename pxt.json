@@ -6,14 +6,13 @@
         "core": "*",
         "radio": "*",
         "microphone": "*",
-        "kitronik_RTC": "github:KitronikLtd/pxt-kitronik-rtc-base#v0.0.12",
-        "kitronik_BME688": "github:KitronikLtd/pxt-kitronik-bme688-base#v0.0.8",
-        "kitronik_EEPROM": "github:KitronikLtd/pxt-kitronik-eeprom-base#v0.0.2",
-        "kitronik_OLED_V2": "github:KitronikLtd/pxt-kitronik-oled-base-V2-only#v0.0.5"
+        "kitronik_RTC": "github:KitronikLtd/pxt-kitronik-rtc-base",
+        "kitronik_BME688": "github:KitronikLtd/pxt-kitronik-bme688-base",
+        "kitronik_EEPROM": "github:KitronikLtd/pxt-kitronik-eeprom-base",
+        "kitronik_OLED_V2": "github:KitronikLtd/pxt-kitronik-oled-base-V2-only"
     },
     "files": [
         "README.md",
-        "main.blocks",
         "main.ts"
     ],
     "testFiles": [
