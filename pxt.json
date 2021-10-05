@@ -7,7 +7,7 @@
         "radio": "*",
         "microphone": "*",
         "kitronik_RTC": "github:KitronikLtd/pxt-kitronik-rtc-base",
-        "kitronik_BME688": "github:KitronikLtd/pxt-kitronik-bme688-base",
+        "kitronik_BME688": "github:KitronikLtd/pxt-kitronik-bme688-base#v0.0.8",
         "kitronik_EEPROM": "github:KitronikLtd/pxt-kitronik-eeprom-base",
         "kitronik_OLED_V2": "github:KitronikLtd/pxt-kitronik-oled-base-V2-only"
     },
