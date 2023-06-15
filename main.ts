@@ -1136,9 +1136,34 @@ namespace kitronik_air_quality {
         }
 
         show("Setting baselines", 4, ShowAlign.Centre)
+        show("0%", 5, ShowAlign.Centre)
 
-        kitronik_BME688.establishBaselines()    // Call function in bme688-base to read and calculate the baselines for gas resistance and ambient temperature
+        // A baseline gas resistance is required for the IAQ calculation - it should be taken in a well ventilated area without obvious air pollutants
+        // Take 60 readings over a ~5min period and find the mean
+        // Establish the baseline gas resistance reading and the ambient temperature.
+        // These values are required for air quality calculations.
+        kitronik_BME688.setAmbTempFlag(false)
 
+        let burnInReadings = 0
+        let burnInData = 0
+        let ambTotal = 0
+        while (burnInReadings < 60) {               // Measure data and continue summing gas resistance until 60 readings have been taken
+            kitronik_BME688.readDataRegisters()
+            kitronik_BME688.calcTemperature(tRaw)
+            kitronik_BME688.intCalcGasResistance(gResRaw, gasRange)
+            burnInData += gRes
+            ambTotal += newAmbTemp
+            basic.pause(5000)
+            burnInReadings++
+            clearLine(5)
+            show(Math.round((burnInReadings / 60) * 100) + "%", 5, ShowAlign.Centre)
+        }
+        kitronik_BME688.setGBase(Math.trunc(burnInData / 60))             // Find the mean gas resistance during the period to form the baseline
+        kitronik_BME688.tAmbient = Math.trunc(ambTotal / 60)    // Calculate the ambient temperature as the mean of the 60 initial readings
+
+        kitronik_BME688.setAmbTempFlag(true)
+
+        clear()
         show("Setup Complete!", 5, ShowAlign.Centre)
         basic.pause(2000)
         clear()
@@ -1330,19 +1355,19 @@ namespace kitronik_air_quality {
     let NONE = 0
     let USB = 1
 
-    let delimiter = " "
+    let delimiter = ";"
 
-    let incDate = false
-    let incTime = false
-    let incTemp = false
-    let incPress = false
-    let incHumid = false
-    let incIAQ = false
-    let incCO2 = false
-    let incLight = false
+    let incDate = true
+    let incTime = true
+    let incTemp = true
+    let incPress = true
+    let incHumid = true
+    let incIAQ = true
+    let incCO2 = true
+    let incLight = true
 
-    let tUnit = 0
-    let pUnit = 0
+    let tUnit = TemperatureUnitList.C
+    let pUnit = PressureUnitList.Pa
 
     let logDate = ""
     let logTime = ""
@@ -1411,106 +1436,6 @@ namespace kitronik_air_quality {
             delimiter = ","
         else if (charSelect == Separator.space)
             delimiter = " "
-    }
-
-    /**
-     * Include the date in the data logging output.
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=90 blockGap=8
-    //% blockId=kitronik_air_quality_include_date
-    //% block="include Date"
-    export function includeDate() {
-        incDate = true
-    }
-
-    /**
-     * Include the time in the data logging output.
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=89 blockGap=8
-    //% blockId=kitronik_air_quality_include_time
-    //% block="include Time"
-    export function includeTime() {
-        incTime = true
-    }
-
-    /**
-     * Include the temperature in the data logging output.
-     * @param tempUnit is in °C (Celsius) or °F (Fahrenheit) according to selection
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=88 blockGap=8
-    //% blockId=kitronik_air_quality_include_temperature
-    //% block="include Temperature in %tempUnit"
-    export function includeTemperature(tempUnit: TemperatureUnitList) {
-        tUnit = tempUnit
-        incTemp = true
-    }
-
-    /**
-     * Include the presure in the data logging output.
-     * @param presUnit is in Pa (Pascals) or mBar (millibar) according to selection
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=87 blockGap=8
-    //% blockId=kitronik_air_quality_include_pressure
-    //% block="include Pressure in %presUnit"
-    export function includePressure(presUnit: PressureUnitList) {
-        pUnit = presUnit
-        incPress = true
-    }
-
-    /**
-     * Include the humidity in the data logging output.
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=86 blockGap=8
-    //% blockId=kitronik_air_quality_include_humidity
-    //% block="include Humidity"
-    export function includeHumidity() {
-        incHumid = true
-    }
-
-    /**
-     * Include the IAQ score in the data logging output.
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=85 blockGap=8
-    //% blockId=kitronik_air_quality_include_iaq
-    //% block="include IAQ Score"
-    export function includeIAQ() {
-        incIAQ = true
-    }
-
-    /**
-     * Include the eCO2 in the data logging output.
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=84 blockGap=8
-    //% blockId=kitronik_air_quality_include_eco2
-    //% block="include eCO2"
-    export function includeCO2() {
-        incCO2 = true
-    }
-
-    /**
-     * Include the light level in the data logging output (micro:bit LEDs cannot be used if this block is included).
-     */
-    //% subcategory="Data Logging"
-    //% group="Setup"
-    //% weight=83 blockGap=8
-    //% blockId=kitronik_air_quality_include_light
-    //% block="include Light Level"
-    export function includeLight() {
-        incLight = true
     }
 
     // Store the Kitronik Header and standard data column headings in the reserved metadata EEPROM blocks
@@ -1741,5 +1666,105 @@ namespace kitronik_air_quality {
                 serial.writeString(data)
             }
         }
+    }
+
+    /**
+     * Include the date in the data logging output.
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=50 blockGap=8
+    //% blockId=kitronik_air_quality_include_date
+    //% block="include Date %displayOutput=on_off_toggle"
+    export function includeDate(inclueOutput: boolean) {
+        incDate = inclueOutput
+    }
+
+    /**
+     * Include the time in the data logging output.
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=49 blockGap=8
+    //% blockId=kitronik_air_quality_include_time
+    //% block="include Time %displayOutput=on_off_toggle"
+    export function includeTime(inclueOutput: boolean) {
+        incTime = inclueOutput
+    }
+
+    /**
+     * Include the temperature in the data logging output.
+     * @param tempUnit is in °C (Celsius) or °F (Fahrenheit) according to selection
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=48 blockGap=8
+    //% blockId=kitronik_air_quality_include_temperature
+    //% block="include Temperature in %tempUnit %displayOutput=on_off_toggle"
+    export function includeTemperature(tempUnit: TemperatureUnitList, inclueOutput: boolean) {
+        tUnit = tempUnit
+        incTemp = inclueOutput
+    }
+
+    /**
+     * Include the presure in the data logging output.
+     * @param presUnit is in Pa (Pascals) or mBar (millibar) according to selection
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=47 blockGap=8
+    //% blockId=kitronik_air_quality_include_pressure
+    //% block="include Pressure in %presUnit %displayOutput=on_off_toggle"
+    export function includePressure(presUnit: PressureUnitList, inclueOutput: boolean) {
+        pUnit = presUnit
+        incPress = inclueOutput
+    }
+
+    /**
+     * Include the humidity in the data logging output.
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=46 blockGap=8
+    //% blockId=kitronik_air_quality_include_humidity
+    //% block="include Humidity %displayOutput=on_off_toggle"
+    export function includeHumidity(inclueOutput: boolean) {
+        incHumid = inclueOutput
+    }
+
+    /**
+     * Include the IAQ score in the data logging output.
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=45 blockGap=8
+    //% blockId=kitronik_air_quality_include_iaq
+    //% block="include IAQ Score %displayOutput=on_off_toggle"
+    export function includeIAQ(inclueOutput: boolean) {
+        incIAQ = inclueOutput
+    }
+
+    /**
+     * Include the eCO2 in the data logging output.
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=44 blockGap=8
+    //% blockId=kitronik_air_quality_include_eco2
+    //% block="include eCO2 %displayOutput=on_off_toggle"
+    export function includeCO2(inclueOutput: boolean) {
+        incCO2 = inclueOutput
+    }
+
+    /**
+     * Include the light level in the data logging output (micro:bit LEDs cannot be used if this block is included).
+     */
+    //% subcategory="Data Logging"
+    //% group="Include Outputs"
+    //% weight=43 blockGap=8
+    //% blockId=kitronik_air_quality_include_light
+    //% block="include Light Level %displayOutput=on_off_toggle"
+    export function includeLight(inclueOutput: boolean) {
+        incLight = inclueOutput
     }
 }
