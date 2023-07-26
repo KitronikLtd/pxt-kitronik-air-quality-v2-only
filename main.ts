@@ -1037,35 +1037,7 @@ namespace kitronik_air_quality {
     //Global variables used for storing one copy of value, these are used in multiple locations for calculations
     let bme688InitFlag = false
     let gasInit = false
-    let writeBuf = pins.createBuffer(2)
-
-    // Calculated readings of sensor parameters from raw adc readings
-    export let tRead = 0
-    export let pRead = 0
-    export let hRead = 0
-    export let gRes = 0
-    export let iaqPercent = 0
-    export let iaqScore = 0
-    export let eCO2Value = 0
-
-    let gBase = 0
-    let hBase = 40        // Between 30% & 50% is a widely recognised optimal indoor humidity, 40% is a good middle ground
-    let hWeight = 0.25     // Humidity contributes 25% to the IAQ score, gas resistance is 75%
-    let tPrev = 0
-    let hPrev = 0
-    let measTime = 0
-    let measTimePrev = 0
-
-    let tRaw = 0    // adc reading of raw temperature
-    let pRaw = 0       // adc reading of raw pressure
-    let hRaw = 0       // adc reading of raw humidity
-    let gResRaw = 0  // adc reading of raw gas resistance
-    let gasRange = 0
-
-    let t_fine = 0                          // Intermediate temperature value used for pressure calculation
-    let newAmbTemp = 0
-    export let tAmbient = 0       // Intermediate temperature value used for heater calculation
-
+    
     // Initialise the BME688, establishing communication, entering initial T, P & H oversampling rates, setup filter and do a first data reading (won't return gas)
     export function bme688Init(): void {
         kitronik_BME688.initialise()    // Call BME688 setup function in bme688-base extension
@@ -1142,17 +1114,17 @@ namespace kitronik_air_quality {
         // Take 60 readings over a ~5min period and find the mean
         // Establish the baseline gas resistance reading and the ambient temperature.
         // These values are required for air quality calculations.
-        kitronik_BME688.setAmbTempFlag(false)
+        kitronik_BME688.setAmbTempFlag(true)
 
         let burnInReadings = 0
         let burnInData = 0
         let ambTotal = 0
         while (burnInReadings < 60) {               // Measure data and continue summing gas resistance until 60 readings have been taken
             kitronik_BME688.readDataRegisters()
-            kitronik_BME688.calcTemperature(tRaw)
-            kitronik_BME688.intCalcGasResistance(gResRaw, gasRange)
-            burnInData += gRes
-            ambTotal += newAmbTemp
+            kitronik_BME688.calcTemperature(kitronik_BME688.tRaw)
+            kitronik_BME688.intCalcGasResistance(kitronik_BME688.gResRaw, kitronik_BME688.gasRange)
+            burnInData += kitronik_BME688.gRes
+            ambTotal += kitronik_BME688.tAmbient
             basic.pause(5000)
             burnInReadings++
             clearLine(5)
@@ -1218,26 +1190,6 @@ namespace kitronik_air_quality {
     export function readHumidity(): number {
         return kitronik_BME688.hRead
     }
-
-    /**
-    * Read Gas Resistance from sensor as a Number.
-    * Units for gas resistance are in Ohms.
-    */
-    //% subcategory="Sensors"
-    //% group="Air Quality"
-    //% blockId="kitronik_air_quality_read_gas_resistance"
-    //% block="Read Gas Resistance"
-    //% weight=50 blockGap=8
-    export function readGasRes(): number {
-        if (gasInit == false) {
-            clear()
-            show("ERROR", 3, ShowAlign.Centre)
-            show("Gas Sensor not setup!", 5, ShowAlign.Centre)
-            return 0
-        }
-
-        return kitronik_BME688.gRes
-    }
     
     /**
     * Read eCO2 from sensor as a Number (250 - 40000+ppm).
@@ -1302,51 +1254,6 @@ namespace kitronik_air_quality {
 
         return kitronik_BME688.iaqScore
     }
-
-    ///**
-    //* Return the Air Quality rating as a text-based categorisation.
-    //* These values are based on the BME688 datasheet, Page 11, Table 6.
-    //*/
-    ////% subcategory="Sensors"
-    ////% group="Air Quality"
-    ////% blockId=kitronik_air_quality_iaq_text
-    ////% block="get air quality category"
-    ////% weight=90 blockGap=8
-    //export function getAirQualityText(): string {
-    //    if (gasInit == false) {
-    //        clear()
-    //        show("ERROR", 3, ShowAlign.Centre)
-    //        show("Gas Sensor not setup!", 5, ShowAlign.Centre)
-    //        return "NULL"
-    //    }
-    //    kitronik_BME688.calcAirQuality()
-
-    //    let airQualityRating = ""
-
-    //    if (iaqScore <= 50) {
-    //        airQualityRating = "Excellent"
-    //    }
-    //    else if ((iaqScore > 50) && (iaqScore <= 100)) {
-    //        airQualityRating = "Good"
-    //    }
-    //    else if ((iaqScore > 100) && (iaqScore <= 150)) {
-    //        airQualityRating = "Lightly Polluted"
-    //    }
-    //    else if ((iaqScore > 150) && (iaqScore <= 200)) {
-    //        airQualityRating = "Moderately Polluted"
-    //    }
-    //    else if ((iaqScore > 200) && (iaqScore <= 250)) {
-    //        airQualityRating = "Heavily Polluted"
-    //    }
-    //    else if ((iaqScore > 250) && (iaqScore <= 350)) {
-    //        airQualityRating = "Severely Polluted"
-    //    }
-    //    else if (iaqScore > 350) {
-    //        airQualityRating = "Extremely Polluted"
-    //    }
-
-    //    return airQualityRating
-    //}    
 
     ////////////////////////////////
     //       DATA LOGGING         //
